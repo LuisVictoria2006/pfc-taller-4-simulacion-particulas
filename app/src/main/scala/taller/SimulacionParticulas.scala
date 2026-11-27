@@ -117,13 +117,21 @@ class SimulacionParticulas {
   // Punto 4: trabajo y profundidad --------------------------------------------
 
   /** El número total de operaciones, una por partícula. */
-  def trabajo(n: Int): Int = ???
+  def trabajo(n: Int): Int = n
 
   /** Cuántas veces se parte a la mitad, más el tramo que queda sin partir. */
-  def profundidad(n: Int, umbral: Int): Int = ???
+  def profundidad(n: Int, umbral: Int): Int = {
+    val limite = math.max(umbral, 1)
+    def aux(m: Int): Int =
+      if (m <= limite) m
+      else 1 + aux((m + 1) / 2)
+
+    aux(n)
+  }
 
   /** La profundidad más el trabajo entre p procesadores. */
-  def tiempoEstimado(n: Int, p: Int, umbral: Int): Double = ???
+  def tiempoEstimado(n: Int, p: Int, umbral: Int): Double =
+    profundidad(n, umbral) + trabajo(n).toDouble / p
 
   // Punto 5: medir la aceleración ---------------------------------------------
 
@@ -133,14 +141,17 @@ class SimulacionParticulas {
       (withWarmer(new Warmer.Default) measure { cuerpo }).value
     }
     muestras.sorted.apply(muestras.length / 2)
-  }
+  } 
 
   /** El cociente entre el tiempo secuencial y el paralelo. */
-  def aceleracion(tSecuencial: Double, tParalelo: Double): Double = ???
+  def aceleracion(tSecuencial: Double, tParalelo: Double): Double =
+    tSecuencial / tParalelo
 
   /**
    * El umbral que menos tarda de una lista de candidatos. Con la lista vacía,
    * el tamaño del sistema, que equivale a no repartir.
    */
-  def umbralConveniente(s: Sistema, dt: Double, umbrales: List[Int]): Int = ???
-}
+  def umbralConveniente(s: Sistema, dt: Double, umbrales: List[Int]): Int =
+    if (umbrales.isEmpty) s.length
+    else umbrales.minBy(u => medir(3)(pasoParalelo(s, dt, u)))
+}    
